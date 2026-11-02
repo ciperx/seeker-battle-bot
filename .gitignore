@@ -1,0 +1,6 @@
+.swarmrelay/
+identity.json
+_tmp_*.js
+_draft_results.json
+local-test.mjs
+arena-sim.mjs
