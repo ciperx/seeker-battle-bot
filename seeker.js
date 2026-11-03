@@ -87,14 +87,6 @@ function steerToward(u, goal) {
   return want;
 }
 
-// per-unit movement memory (stuck detection), reset every match in hello()
-const mem = new Map();
-function memFor(id) {
-  let m = mem.get(id);
-  if (!m) { m = { x: 0, y: 0, stuck: 0, escH: 0, escLeft: 0 }; mem.set(id, m); }
-  return m;
-}
-
 // ---- split-hold objective assignment -------------------------------------
 // assign[unitId] = index into o.objectives. Recomputed when the set of
 // objective owners changes (or every 40 ticks as a safety net).
@@ -158,7 +150,7 @@ globalThis.controller = {
     spawn = [map.spawns[side][0] * FP + FP / 2, map.spawns[side][1] * FP + FP / 2];
     enemySpawn = [map.spawns[1 - side][0] * FP + FP / 2, map.spawns[1 - side][1] * FP + FP / 2];
     hill = [Math.floor(map.width / 2) * FP + FP / 2, Math.floor(map.height / 2) * FP + FP / 2];
-    assign = {}; ownerSig = ""; assignStamp = -999; mem.clear();
+    assign = {}; ownerSig = ""; assignStamp = -999;
   },
 
   tick(o) {
@@ -218,32 +210,12 @@ globalThis.controller = {
       }
 
       // ----- movement -----
-      // STUCK RECOVERY. v10's only escape was `if (u.blocked) { throttle=-FP; steer=FP }` —
-      // one tick of reverse, then straight back into the same wall, forever (bench seed
-      // 3319810671: mbt2 frozen at tile 32,76 from t=185 to t=550, speed pinned near 0 while
-      // its heading swept 360 degrees). Only a unit that is TRYING to move and is not moving
-      // gets a committed escape, and the escape is short, so it cannot drag a unit off post.
-      // (Counting stuck ticks for holding units was measured: -40 points of win rate.)
       if (goal && o.canMove && !hold) {
-        const m = memFor(u.id);
-        if (dist(u.x, u.y, m.x, m.y) > FP * 0.25) { m.stuck = 0; m.escLeft = 0; }
-        else if (u.blocked) m.stuck += 3;
-        else m.stuck++;
-        m.x = u.x; m.y = u.y;
-
-        if (m.stuck > 75 && m.escLeft <= 0) { m.escH = (u.heading + 900) & 4095; m.escLeft = 25; }
-        if (m.escLeft > 0) {
-          m.escLeft--;
-          const d = angDiff(u.heading, m.escH);
-          order.steer = Math.max(-FP, Math.min(FP, Math.round((d / spec.turnRate) * FP)));
-          order.throttle = FP;
-        } else {
-          const want = steerToward(u, goal);
-          const d = angDiff(u.heading, want);
-          order.steer = Math.max(-FP, Math.min(FP, Math.round((d / spec.turnRate) * FP)));
-          order.throttle = Math.abs(d) > 512 ? Math.round(FP * 0.25) : FP;
-          if (u.blocked) { order.throttle = -FP; order.steer = FP; }
-        }
+        const want = steerToward(u, goal);
+        const d = angDiff(u.heading, want);
+        order.steer = Math.max(-FP, Math.min(FP, Math.round((d / spec.turnRate) * FP)));
+        order.throttle = Math.abs(d) > 512 ? Math.round(FP * 0.25) : FP;
+        if (u.blocked) { order.throttle = -FP; order.steer = FP; }
       } else if (hold) {
         order.throttle = 0;
         order.steer = 0;

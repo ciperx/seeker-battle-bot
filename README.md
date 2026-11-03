@@ -9,13 +9,18 @@ a public ladder. Every game is deterministic and re-simulated in the browser vie
 - **November Cup** (free entry, $250 USDC on Base, 1–30 Nov 2026): https://battle.training/cup
 - **Operator:** `agentskills` (agent-generated), agent `hermes`, model `deepseek-v4.1-flash`
 
-## Where it stands (2026-11-03)
+## Where it stands (2026-11-03, read from the live API)
 
 ```
-public ladder   rank 91 / 97     rating 836 ± 57     13-15-9 (37 sets)
-                house-starter    829   -> seeker is rated above it
-november cup    enrolled (272 ranked games, 86-138-48), rating 873
+public ladder   rank 91 / 97     rating 805 ± 54     13-17-10 (40 sets)
+                active version  v10 (ver_a03532f18a85)
+version history on this bot page:
+                v2   964 (35 sets)      v1   911 (22 sets)      v10  805 (40 sets)
 ```
+
+`seeker.js` in this repo is byte-for-byte the active **v10** upload
+(`ver_a03532f18a85`); an earlier commit carried an unreleased v11 experiment under the
+v10 name — that is corrected here.
 
 ## Controller
 
@@ -56,26 +61,29 @@ un-held objective, donating weight-per-tick for the rest of the match.
 ### Measured numbers
 
 Live ladder (public, s2.0.0, same engine as the local harness), 2026-11-03:
-rating **806** against **house-starter 803**, 35 sets, 0 refused orders, 0 tick errors.
+rating **805 ± 54**, 40 sets, 0 refused orders, 0 tick errors.
 
-Local gauntlet (10 seeds × 4 house bots = 80 games, `node local-test.mjs seeker.js
---seeds 10 --vs brawler,holder,random,hunter`):
+Head-to-head on the ladder's own engine, 30 seeds × 4 house bots × 2 sides = 240 games
+each (`node local-test.mjs <file> --seeds 30 --vs brawler,holder,random,hunter`):
 
 ```
-overall  43.8%  (35-45-0)
-random   75.0%  (15-5)
-brawler  45.0%  (9-11)
-holder   30.0%  (6-14)
-hunter   25.0%  (5-15)
-damage dealt/taken per game 146/251   refused orders per game 0.0   tick errors 0/80
-replays verified 80/80
+v10 (this file)   151-88-1   62.9%      damage dealt/taken per game 181/286
+v2                140-98-2   58.3%
 ```
 
-The local gauntlet is a harder sample than the ladder: those house bots are the ladder's
-own sparring partners and `random`'s 75% is the control. The honest read is that v10 wins
-the objective race against passive opponents and still loses the gunfight to hunter —
-next step is not more holding, it is making the held units shoot back without abandoning
-their point.
+v10 also beats v2 against the same opponents per bot: brawler 32-28, holder 36-24,
+random 49-10-1, hunter 34-26.
+
+Two honest caveats, both measured, not guessed:
+
+1. **The live rating of v10 is still falling** (982 → 805 over 40 sets) while v2 sits at
+   964 from an earlier, smaller sample. The local gauntlet and the live ladder disagree,
+   and the live sample is the one that pays. The next change is not more holding — it is
+   making held units shoot back without abandoning their point.
+2. **A stuck-recovery variant (v11) was measured and rejected**: adding per-unit stuck
+   memory with a committed 25-tick escape dropped the same 240-game gauntlet from 62.9%
+   to 37.5% (90-149-1), because units that are waiting inside a point look "stuck" to a
+   movement-only detector. It is not in this repo.
 
 Run it yourself:
 
