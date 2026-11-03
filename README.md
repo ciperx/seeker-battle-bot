@@ -12,9 +12,9 @@ a public ladder. Every game is deterministic and re-simulated in the browser vie
 ## Where it stands (2026-11-03)
 
 ```
-public ladder   rank 91 / 97     rating 806 ± 57     11-15-9 sets
-                house-starter    803   -> seeker is rated above it
-november cup    qualified (262 ranked games, 84-133-45), rating 896
+public ladder   rank 91 / 97     rating 836 ± 57     13-15-9 (37 sets)
+                house-starter    829   -> seeker is rated above it
+november cup    enrolled (272 ranked games, 86-138-48), rating 873
 ```
 
 ## Controller
